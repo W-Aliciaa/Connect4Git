@@ -24,6 +24,7 @@ class Board:
         y None representa una posición vacía
         Cada lista es una columna y el fondo es el principio
         """
+        self.found_slot = False
         self._columns: MatrixColumn = []
         for col_num in range(BOARD_COLUMNS):
             self._columns.append([])
@@ -65,7 +66,7 @@ class Board:
         return new_matrix
     def BoardCode(): #Función para comprimir el tablero en una cadena
         pass
-    #interfaz pública
+    #interfaz pública 
     def play(self, player_char: str, col_number: int)->None:
         """
         Método impuro, solo lleva a cabo efecto secundarios 
@@ -77,18 +78,24 @@ class Board:
             #selecciono la columna
             col = self._columns[col_number]
             #inserto el char del jugador en el primer None que encuentro
-            found_slot = False #indica si hemos encontrado un hueco donde meter la jugada
+            #self.found_slot = False #indica si hemos encontrado un hueco donde meter la jugada
             for index, row in enumerate(col):
                 if col[index] == None:
-                    found_slot = True
+                    self.found_slot = True
                     col[index] = player_char
                     break
-            if not found_slot:
+            if not self.found_slot:
                 #no he encontrado ningun hueco vacío: estaba llena!
                 raise ValueError("ESTA LLENO!!")
             
         except IndexError:
             raise ValueError(f"Ese indice: {col_number}, no es válido")
+
+    def is_tie(self, player_char: str, player2_char:str)->bool:
+        return (self.is_victory(player_char) and self.is_victory(player2_char)) == False
+    
+    def is_full(self)->bool:
+        return self.found_slot
 
     def is_victory(self, player_char: str)-> bool:
         """
