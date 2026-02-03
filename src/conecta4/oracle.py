@@ -25,6 +25,15 @@ class ColumnRecommendation:
         self._index = index
         self._classification = classification
 
+    def __eq__(self,other)->bool:
+        #si son de clases distintas, pues distintos
+        if not isinstance(other, self.__class__):
+            return False
+        else:
+            return (self._index, self._classification) == (other._index, other._classification)ç
+    
+    def __hash__(self)->int:
+        return hash((self._index, self._classification))
 # Oráculos, de más tonto a más listo
 
 #Los oráculos, deben de realizar un trabajo complejo: clasificar columnas

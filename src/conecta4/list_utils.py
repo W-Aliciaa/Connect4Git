@@ -16,7 +16,7 @@ def find_streak(haystack, needle, streak):
       
   return contador == streak
 
-def get_nths(matrix: list[list[str | None]] , n):
+def get_nths(matrix: MatrixColumn, n):
   """
   Recibe un matriz y devuelve una lista con el elemento en la posición n de cada sublista
   Si la sublista no tiene indice n coloca None
@@ -35,7 +35,7 @@ def get_nths(matrix: list[list[str | None]] , n):
   return result
 
 
-def transpose(matrix: list[list[str | None]]) -> list[list[str | None]]:
+def transpose(matrix: MatrixColumn) -> MatrixColumn:
   """
   Devuelve la matriz transpuesta usando get_nths.
   Convierte columnas en filas.

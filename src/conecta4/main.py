@@ -2,6 +2,8 @@ from conecta4.board import Board
 from conecta4.oracle import *
 from conecta4.player import Player
 
+from conecta4.list_utils import *
+
 #HORIZONTAL
 a = Board()
 

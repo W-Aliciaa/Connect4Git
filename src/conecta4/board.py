@@ -92,9 +92,15 @@ class Board:
             raise ValueError(f"Ese indice: {col_number}, no es válido")
 
     def is_tie(self, player_char: str, player2_char:str)->bool:
+        """
+        No gana ni player1 ni player2
+        """
         return (self.is_victory(player_char) and self.is_victory(player2_char)) == False
     
     def is_full(self)->bool:
+        """
+        Detecta si el tablero está yeno
+        """
         return self.found_slot
 
     def is_victory(self, player_char: str)-> bool:
@@ -109,7 +115,7 @@ class Board:
 
     def prueba_victory(self,player_char: str)-> str:
         
-        ganador = ""
+        ganador = "NO HAS GANADO!"
         if self._has_vertical_victory(player_char,self._columns):
             ganador = "VICTORIA_VERTICAL" 
         elif self._has_horizontal_victory(player_char,self._columns):
