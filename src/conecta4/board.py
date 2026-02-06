@@ -13,6 +13,8 @@ class Board:
     @classmethod
     def from_list(cls, list_repr: MatrixColumn):
         board = cls()
+        if len(list_repr) != BOARD_COLUMNS:
+            raise ValueError("Número de columnas incorrecto")
         board._columns = deepcopy(list_repr)
         return board
     
@@ -24,7 +26,6 @@ class Board:
         y None representa una posición vacía
         Cada lista es una columna y el fondo es el principio
         """
-        self.found_slot = False
         self._columns: MatrixColumn = []
         for col_num in range(BOARD_COLUMNS):
             self._columns.append([])
@@ -48,8 +49,10 @@ class Board:
         """
         Devuelve representación textual del objeto: las columnas
         """
-        
         return f"<Board:\n{transpose(self._columns)}>"
+    
+    def __len__(self):
+        return len(self._columns)
     
     def print_board(self, matrix_init: MatrixColumn)->str:
         matrix = transpose(matrix_init)
@@ -78,7 +81,7 @@ class Board:
             #selecciono la columna
             col = self._columns[col_number]
             #inserto el char del jugador en el primer None que encuentro
-            #self.found_slot = False #indica si hemos encontrado un hueco donde meter la jugada
+            self.found_slot = False #indica si hemos encontrado un hueco donde meter la jugada
             for index, row in enumerate(col):
                 if col[index] == None:
                     self.found_slot = True
@@ -93,7 +96,7 @@ class Board:
 
     def is_tie(self, player_char: str, player2_char:str)->bool:
         """
-        No gana ni player1 ni player2
+        No gana ni player1 ni player2, empate
         """
         return (self.is_victory(player_char) and self.is_victory(player2_char)) == False
     
@@ -101,7 +104,7 @@ class Board:
         """
         Detecta si el tablero está yeno
         """
-        return self.found_slot
+        return all(None not in column for column in self._columns)
 
     def is_victory(self, player_char: str)-> bool:
         """

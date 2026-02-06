@@ -1,8 +1,10 @@
+from typing import TYPE_CHECKING
 from enum import Enum, auto
 from conecta4.board import Board
-from conecta4.player import Player
 from conecta4.settings import BOARD_COLUMNS, BOARD_ROWS
 from copy import deepcopy
+if TYPE_CHECKING:
+    from conecta4.player import Player
 
 #Clases de columna
 class ColumnClassification(Enum):
@@ -30,7 +32,7 @@ class ColumnRecommendation:
         if not isinstance(other, self.__class__):
             return False
         else:
-            return (self._index, self._classification) == (other._index, other._classification)ç
+            return (self._index, self._classification) == (other._index, other._classification)
     
     def __hash__(self)->int:
         return hash((self._index, self._classification))
@@ -46,14 +48,14 @@ class BaseOracle:
     y no llenas.
     """
 
-    def get_recommendation(self, board: Board, player: Player )->list[ColumnRecommendation]:
+    def get_recommendation(self, board: Board, player: "Player")->list[ColumnRecommendation]:
         recomendations = []
         for index in range(BOARD_COLUMNS):
             recomendations.append(self._get_column_recommendation(board,index,player))
         return recomendations
         
 
-    def _get_column_recommendation(self, board: Board, index: int, player: Player)->ColumnRecommendation:
+    def _get_column_recommendation(self, board: Board, index: int, player: "Player")->ColumnRecommendation:
         """
         Método privado, que determina si una columna está llena, en cuyo caso la clasifica
         como FULL, para todo lo demás, MAYBE
@@ -78,7 +80,7 @@ class SmartOracle(BaseOracle):
     def _get_column_recommendation(self,
                                   board: Board,
                                   index: int,
-                                  player: Player)-> ColumnRecommendation:
+                                  player: "Player")-> ColumnRecommendation:
         
         """
         Afinar las recomendaciones. Las que hayan salido como MAYBE,
@@ -94,26 +96,26 @@ class SmartOracle(BaseOracle):
             #creo un tablero temporal a partir de board
             #juego en index
             temp_board = self._play_on_temp_board(board, index, player, player._char)
-            temp_board_play2 = self._play_on_temp_board(board, index, player, player.opponent_char)
+            temp_board_play2 = self._play_on_temp_board(board, index, player, player.opponent._char)
 
             #le pregunto al tablero temporal si is_victory(player)
             if temp_board.is_victory(player._char):
                 #si es así, reclasifico a WIN
                 recommendation._classification = ColumnClassification.WIN
                 recommendation._index = index
-            elif temp_board_play2.is_victory(player.opponent_char):
+            elif temp_board_play2.is_victory(player.opponent._char):
                 recommendation._classification = ColumnClassification.LOSE
                 recommendation._index = index
         return recommendation
     
 
-    def _play_on_temp_board(self, original: Board, index: int, player: Player, player_char: str)->Board:
+    def _play_on_temp_board(self, original: Board, index: int, player: "Player", player_char: str)->Board:
         """
         Crea una copia (profunda) del board original juega en nombre de player
         en la columna que nos han dicho, y devuelve el board resultante
         """
         board_temp = deepcopy(original)
-        if player_char == player.opponent_char:
+        if player_char == player.opponent._char:
             for i in range(BOARD_COLUMNS):
                 board_temp.play(player_char, i)
         else:

@@ -1,6 +1,7 @@
 from conecta4.board import Board
 from conecta4.oracle import *
 from conecta4.player import Player
+from conecta4.match import Match
 
 from conecta4.list_utils import *
 
@@ -65,7 +66,10 @@ print(d.print_board(d._columns))
 
 
 #preuba de oráculo
-player = Player("Alicia", "X", "0")
+player = Player("Alicia")
+player2 = Player("Alberto")
+match = Match(player, player2)
+
 e = Board()
 e.play("X",0)
 e.play("X",1)
@@ -76,4 +80,4 @@ e.play("0",3)
 #simple = BaseOracle()
 recommendation = SmartOracle()
 print(recommendation._get_column_recommendation(e, 3, player)._classification)
-print(d.print_board(e._columns))
+print(e.print_board(e._columns))

@@ -4,14 +4,16 @@ from conecta4.settings import BOARD_COLUMNS,VICTORY_STREAK
 
 def test_empty_board():
     empty = Board()
-    assert empty != None
+
     assert empty.is_full() == False
+    assert empty.is_victory("0") == False
     assert empty.is_victory("X") == False
 
 def test_play():
     b = Board()
-    for i in range(BOARD_COLUMNS):
-        b.play("X",i)
+    for c in range(BOARD_COLUMNS):
+        for r in range(BOARD_ROWS):
+            b.play("X",r)
     assert b.is_full() == True
 
 def test_victory():
@@ -34,13 +36,15 @@ def test_tie(): #empate de columna
 
 def test_add_to_full():
     full = Board()
-    for i in range(BOARD_COLUMNS):
-        full.play("X",i)
-    full.play("X",BOARD_COLUMNS-1)
+    for c in range(BOARD_COLUMNS):
+        for r in range(BOARD_ROWS):
+            full.play("X",r)
+    #full.play("X",BOARD_COLUMNS-1) -> Si intentamos esto va a saltar un error de que esta 
+    # lleno (raise ValueError definido en el método board.play())
     assert full.is_full()
 
 def test_vertical_victory():
-    vertical = Board.from_list([["X","X","X",None],
+    vertical = Board.from_list([["0","X","X","X"],
                                [None,None,None,None],
                                [None,None,None,None],
                                [None,None,None,None]])
