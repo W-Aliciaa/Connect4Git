@@ -1,6 +1,7 @@
 from conecta4.settings import *
-from conecta4.list_utils import find_streak, transpose, displace_lol
+from conecta4.list_utils import *
 from copy import deepcopy
+from conecta4.string_utils import *
 
 
 class Board:
@@ -18,6 +19,26 @@ class Board:
         board._columns = deepcopy(list_repr)
         return board
     
+    @classmethod
+    def fromBoardCode(cls, board_code: BoaradCode)->Board:
+        return cls.fromBoardRawCode(board_code.raw_code)
+    
+    @classmethod   
+    def fromBoardRawCode(cls, board_raw_code: str)-> Board:
+        """
+        Transforma una cadena en formato de BoardCode en un tablero cuadrado 
+        """
+        #Convertir la cadena del código en una lista de cadenas
+        list_of_strings = board_raw_code.split("|")
+
+        #Transformar cada cadena en una lista de caracteres
+        matrix = explode_list_of_strings(list_of_strings)
+        
+        #Cambiamos todas las ocurrencias de . por None
+        matrix = replace_all_in_matrix(matrix, ".", None)
+        #Transformamos esa lista en un Board
+        return cls.from_list(matrix)
+
     #dunders
     def __init__(self) -> None:
         """
@@ -68,9 +89,8 @@ class Board:
             characters = ""
         return new_matrix
     
-    def BoardCode(): #Función para comprimir el tablero en una cadena
-        pass
-
+    def as_code(self):
+        return BoaradCode(self)
 
     #interfaz pública 
     def play(self, player_char: str, col_number: int)->None:
@@ -157,3 +177,26 @@ class Board:
         
         #print(f"Matriz transpuesta y desplazada{new_matrix}")
         return self._has_ascending_victory(player_char, new_matrix)
+    
+
+#Clase para comprimir el tablero en una cadena,
+#para así poder meter el tablero como clave de un diccionario
+class BoaradCode:
+    def __init__(self, board: Board):
+        self._raw_code = collapse_matrix(board._columns)
+
+    @property
+    def raw_code(self)->str:
+        return self._raw_code
+    
+    def __eq__(self, other: BoaradCode)->bool:
+        if not isinstance(other, self.__class__):
+            return False
+        else:
+            return self.raw_code == other.raw_code
+    
+    def __has__(self)->int:
+        return hash(self.raw_code)
+    
+    def __repr__(self)->str:
+        return f"{self.__class__}: {self.raw_code}"

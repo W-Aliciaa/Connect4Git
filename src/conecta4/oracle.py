@@ -137,3 +137,30 @@ class SmartOracle(BaseOracle):
         board_temp = deepcopy(original)
         board_temp.play(player._char, index)
         return board_temp
+
+class MemoizingOracle(SmartOracle):
+    """
+    El método get_recommendation esta ahora memoizado
+    """
+
+    def __init__(self)-> None:
+        super().__init__()
+        self._past_recomendations = {}
+
+    def _make_key(board: Board, player: Player):
+        """
+        La clave debe de combinar el board y el player, de la forma más sencilla posible
+        """
+        return f"{board.as_code().raw_code}@{player._char}"
+    
+
+    def get_recommendation(self, board: Board, player: Player):
+        #Creamos la clave
+        key = self._make_key(board, player)
+
+        #Miramos en el cache: si no está, calculo y guardo en cache
+        if key not in self._past_recomendations:
+            self._past_recomendations[key] = super().get_recommendation(board, player)
+
+        #Devuelvo lo que está en caché
+        return self._past_recomendations[key]

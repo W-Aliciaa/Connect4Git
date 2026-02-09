@@ -77,3 +77,18 @@ def test_descendent_victory():
     
     assert descendent_victory.prueba_victory("X") == "VICTORIA_DESCENDENTE"
     assert descendent_victory.prueba_victory("0") ==  "NO HAS GANADO!"
+
+
+def test_board_code():
+    board = Board.from_list([["X","0",None,None],
+                            ["0","X",None,None],
+                            ["X","0","X","0"],
+                            ["X","X","0", None]])
+    
+    code = board.as_code()
+
+    clone_board = Board.fromBoardCode(code)
+
+    assert clone_board == board
+    assert clone_board.as_code() == code
+    assert clone_board.as_code().raw_code == code.raw_code

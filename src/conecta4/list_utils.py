@@ -1,5 +1,9 @@
 from conecta4.settings import *
 from typing import Any
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+  from conecta4.board import Board
+
 
 def find_streak(haystack, needle, streak):
   assert streak > 0
@@ -106,3 +110,47 @@ def all_same(l):
         same = False
         break
     return same
+
+def collapse_list(list_matrix: list[str|None], empty: str = ".")->str:
+  """
+  Concatena todas las cadenas de la lista en una sola cadena
+  """
+  trans_list_str = ""
+  for element in list_matrix:
+    if element == None:
+      trans_list_str += empty
+    else:
+      trans_list_str += element
+  return trans_list_str
+
+def collapse_matrix(matrix: "Board", empty: str = ".", fence: str = "|")->str:
+  """
+  Concatena las cadenas de las sublistas en una sola cadena
+  separada por |
+  """
+  trans_mat_str = ""
+  for col in matrix:
+    trans_mat_str += fence + collapse_list(col, empty)
+  return trans_mat_str[1:]
+
+def replace_all_in_list(list_to_replace: list[any], old: any, new: any)-> list[any]:
+  """
+  Cambia todas las ocurrencias de old por new
+  """
+  replaced = []
+  for element in list_to_replace:
+    if element == old:
+      replaced.append(new)
+    else:
+      replaced.append(element)
+  return replaced
+
+
+def replace_all_in_matrix(matrix_to_replace: list[list[any]], old: any, new: any )-> list[list[any]]:
+  """
+  Aplica replace_all_in_list a todas las listas
+  """ 
+  m_replaced = []
+  for l in matrix_to_replace:
+    m_replaced.append(replace_all_in_list(l, old, new))
+  return m_replaced

@@ -70,3 +70,34 @@ def test_all_same():
     assert all_same([ColumnRecommendation(0, ColumnClassification.WIN),
                      ColumnRecommendation(0, ColumnClassification.LOSE)]) == False
     
+
+def test_collapse_list():
+    assert collapse_list([]) == ""
+    assert collapse_list(["0","X","X","0"]) == "0XX0"
+    assert collapse_list(["X","X", None, None, None]) == "XX..."
+
+def test_collapse_matrix():
+    assert collapse_matrix([]) == ""
+    assert collapse_matrix([["X", "X", None], 
+                            ["0", "X", "X"], 
+                            ["0", None, None]]) == "XX.|0XX|0.."
+    
+def test_replace_all_in_list():
+    assert replace_all_in_list([None, 3, "546", 33, None], None, "#") == ["#", 3, "546", 33, "#"]
+    assert replace_all_in_list([1,2,3,4,5], "e", 42) == [1,2,3,4,5]
+    assert replace_all_in_list([],34,43) == []
+
+def test_replace_all_in_matrix():
+    #caso normal: tiene lo viejo
+    assert replace_all_in_matrix([[1,2,3,"n","n", None],
+                                  [4,5,"n"]],"n","#") == [[1,2,3,"#","#", None], 
+                                                          [4,5,"#"]]
+    #caso raro: no tiene lo viejo
+    assert replace_all_in_matrix([[None, None, 2, True], 
+                                  [4,5,"#"]],"k", 42) == [[None, None, 2, True],
+                                                          [4,5,"#"]]
+    #caso más raro: lista de listas vacias
+    assert replace_all_in_matrix([], None,7) == []
+    assert replace_all_in_matrix([[],[]], None, 7) == [[], []]
+
+
