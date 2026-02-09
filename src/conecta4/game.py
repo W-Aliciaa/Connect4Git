@@ -1,8 +1,12 @@
 import pyfiglet
 from enum import Enum, auto
+from conecta4.oracle import BaseOracle, SmartOracle
 from conecta4.player import Player, HumanPlayer
 from conecta4.match import Match
 from conecta4.board import Board
+from conecta4.list_utils import transpose
+from beautifultable import BeautifulTable
+from conecta4.settings import *
 
 class RoundType(Enum):
     COMPUTER_VS_COMPUTER = auto()
@@ -54,14 +58,32 @@ class Game:
                 #salgo del bucle
                 break
 
-    def dispplay_move(self, player: Player):
-        pass
+    def dispplay_move(self, player: Player)-> None:
+        print(f"\n{player._name} ({player._char}) has moved in column {player.last_move}")
 
     def display_board(self):
-        pass
+        """
+        Imprimir el tablero
+        """
+        #obtenemos una matriz de caracteres a partir del tablero
+        matrix = transpose(self.board._columns)
+        matrix = matrix[::-1]
+        matrix = transpose(matrix)
+        
+        #crear la tabla de beautifultable
+        bt = BeautifulTable()
+        for col in matrix:
+            bt.columns.append(col)
+        bt.columns.header = [str(i) for i in range(BOARD_COLUMNS)]
+        #imprimirla
+        print(bt)
 
-    def display_result(self):
-        pass
+    def display_result(self)-> None:
+        winner = self.match.get_winner(self.board)
+        if winner != None:
+            print(f"\n{winner._name} ({winner._char}) wins!!!")
+        else:
+            print(f"\nA tie between {self.match.get_player("X").name} (X) and {self.match.get_player("0").name} (0)")
 
     def _is_game_over(self)-> bool:
         winner = self.match.get_winner(self.board)
@@ -85,8 +107,35 @@ class Game:
         #determinar el tipo de partida (preguntando al usuario)
         self.round_type = self._get_round_type()
 
+        if self.round_type == RoundType.COMPUTER_VS_HUMAN:
+            #preguntamos nivel de dificultad
+            self._difficulty_level = self._get_difficulty_level()
+
         #crea la partida
         self.match = self._make_match()
+
+    def _get_difficulty_level(self):
+        """
+        Pregunta al usuario como de listo quiere que sea su oponente
+        """
+        print("""
+            Chose your opponent, human:
+              1) Easy: for clowns and wimps
+              2) Difficult: you may regret it
+              3) Hard: Don't even think about it!
+              """)
+        while True:
+            response = input("Please type 1, 2 or 3: ").strip()
+            if response == "1":
+                level = DifficultyLevel.LOW
+                break
+            elif response == "2":
+                level = DifficultyLevel.MEDIUM
+                break
+            else:
+                level = DifficultyLevel.HIGH
+                break
+        return level
 
     def _get_round_type(self)-> RoundType:
         """
@@ -111,13 +160,17 @@ class Game:
         """
         Player 1 siempre robótico
         """
+        _levels = {DifficultyLevel.LOW : BaseOracle(),
+                   DifficultyLevel.MEDIUM: SmartOracle(),
+                   DifficultyLevel.HIGH: SmartOracle()}
+        
         if self.round_type == RoundType.COMPUTER_VS_COMPUTER:
             #ambos jugadores robóticos
-            player1 = Player("T-X")
-            player2 = Player("T-1000")
+            player1 = Player("T-X", oracle = SmartOracle())
+            player2 = Player("T-1000", oracle = SmartOracle())
         else:
             # ordenador vs humano
-            player1 = Player("T-800")
+            player1 = Player("T-800", oracle = _levels[self._difficulty_level])
             player2 = HumanPlayer(name = input("Enter your name, human: "))
 
         return Match(player1,player2)

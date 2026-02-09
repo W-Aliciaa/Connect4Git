@@ -4,15 +4,15 @@ from conecta4.board import Board
 from conecta4.settings import BOARD_COLUMNS, BOARD_ROWS
 from copy import deepcopy
 if TYPE_CHECKING:
-    from conecta4.player import Player
+    from conecta4.player import Player, HumanPlayer
 
 #Clases de columna
 class ColumnClassification(Enum):
-    FULL = auto()   # Imposible
-    LOSE = auto()   # Derrota inminente
-    BAD  = auto()   # Muy indeseable
-    MAYBE = auto()  # Indeseable (no se muy bien que va a pasar, mejor no arriesgar)
-    WIN  = auto()   # Victoria inmediata
+    FULL = -1   # Imposible
+    LOSE =  5  # Derrota inminente
+    BAD  = 10  # Muy indeseable
+    MAYBE = 20  # Indeseable (no se muy bien que va a pasar, mejor no arriesgar)
+    WIN  = 100  # Victoria inmediata
 
 #Recomendación de una columna: indice + clase
 class ColumnRecommendation: 
@@ -32,10 +32,17 @@ class ColumnRecommendation:
         if not isinstance(other, self.__class__):
             return False
         else:
-            return (self._index, self._classification) == (other._index, other._classification)
+            return self._classification == other._classification
     
     def __hash__(self)->int:
         return hash((self._index, self._classification))
+    
+
+    def __repr__(self)->str:
+        """
+        Devuelve representación textual de las recomendaciones
+        """
+        return f"Recomendationes: {self._classification}"
 # Oráculos, de más tonto a más listo
 
 #Los oráculos, deben de realizar un trabajo complejo: clasificar columnas
@@ -48,7 +55,7 @@ class BaseOracle:
     y no llenas.
     """
 
-    def get_recommendation(self, board: Board, player: "Player")->list[ColumnRecommendation]:
+    def get_recommendation(self, board: Board, player: "Player | HumanPlayer")->list[ColumnRecommendation]:
         recomendations = []
         for index in range(BOARD_COLUMNS):
             recomendations.append(self._get_column_recommendation(board,index,player))
@@ -64,7 +71,7 @@ class BaseOracle:
         result = ColumnRecommendation(index, ColumnClassification.MAYBE)
 
         # compruebo si me he equivocado, y si es asi, cambio el valor de result
-        last_element = BOARD_ROWS - 1 #len(board._columns[index]) -1
+        last_element = len(board._columns[index])-1
         if board._columns[index][last_element] != None:
             result = ColumnRecommendation(index, ColumnClassification.FULL)
 
@@ -89,35 +96,44 @@ class SmartOracle(BaseOracle):
         """
         #pido la clasificación básica
         recommendation = super()._get_column_recommendation(board, index, player)
-        #tablero temporal
-        
+    
         #Afino los Maybe: juego como player en esa columna y compruebo si eso me da una victoria
         if recommendation._classification == ColumnClassification.MAYBE:
-            #creo un tablero temporal a partir de board
-            #juego en index
-            temp_board = self._play_on_temp_board(board, index, player, player._char)
-            temp_board_play2 = self._play_on_temp_board(board, index, player, player.opponent._char)
-
-            #le pregunto al tablero temporal si is_victory(player)
-            if temp_board.is_victory(player._char):
-                #si es así, reclasifico a WIN
+            if self._is_winning_move(board, index, player):
                 recommendation._classification = ColumnClassification.WIN
-                recommendation._index = index
-            elif temp_board_play2.is_victory(player.opponent._char):
+            elif self._is_losing_move(board, index, player):
                 recommendation._classification = ColumnClassification.LOSE
-                recommendation._index = index
+            
         return recommendation
     
+    def _is_losing_move(self, board: Board, index: int, player: Player)->bool:
+        """
+        Si player juega en index, genera una jugada vencedora para el
+        oponente en alguna de las demás columnas?
+        """
+        temp_board = self._play_on_temp_board(board, index, player)
+        will_lose = False
+        for i in range(0, BOARD_COLUMNS):
+            if self._is_winning_move(temp_board, i, player.opponent):
+                will_lose = True
+                break
+        return will_lose
 
-    def _play_on_temp_board(self, original: Board, index: int, player: "Player", player_char: str)->Board:
+    def _is_winning_move(self, board: Board, index: int, player: "Player")->bool:
+        """
+        Determina si al jugar en una posición, nos llevaría a gnar de inmediato
+        """
+        #hago una copia del tablero
+        #juego en ella
+        temp_board = self._play_on_temp_board(board, index, player)
+        #determino si hay una victoria para player o no
+        return temp_board.is_victory(player._char)
+
+    def _play_on_temp_board(self, original: Board, index: int, player: "Player")->Board:
         """
         Crea una copia (profunda) del board original juega en nombre de player
         en la columna que nos han dicho, y devuelve el board resultante
         """
         board_temp = deepcopy(original)
-        if player_char == player.opponent._char:
-            for i in range(BOARD_COLUMNS):
-                board_temp.play(player_char, i)
-        else:
-            board_temp.play(player_char, index)
+        board_temp.play(player._char, index)
         return board_temp

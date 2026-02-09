@@ -67,8 +67,11 @@ class Board:
             new_matrix += str(characters) + "\n"
             characters = ""
         return new_matrix
+    
     def BoardCode(): #Función para comprimir el tablero en una cadena
         pass
+
+
     #interfaz pública 
     def play(self, player_char: str, col_number: int)->None:
         """
@@ -87,10 +90,7 @@ class Board:
                     self.found_slot = True
                     col[index] = player_char
                     break
-            if not self.found_slot:
-                #no he encontrado ningun hueco vacío: estaba llena!
-                raise ValueError("ESTA LLENO!!")
-            
+                
         except IndexError:
             raise ValueError(f"Ese indice: {col_number}, no es válido")
 

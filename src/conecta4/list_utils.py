@@ -89,3 +89,20 @@ def displace_lol(matrix: MatrixColumn,filler: Any):
     size -= 1
 
   return extended
+
+def all_same(l):
+  """
+  Devuelve true si todos los elementos de la lista son iguales o
+  la lista esta vacia
+  """
+
+  if l == []:
+    return True
+  else:
+    same = True
+    first = l[0]
+    for el in l:
+      if el != first:
+        same = False
+        break
+    return same

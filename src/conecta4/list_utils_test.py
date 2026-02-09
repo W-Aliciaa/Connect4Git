@@ -1,5 +1,7 @@
 import pytest
 from conecta4.list_utils import *
+from conecta4.oracle import ColumnClassification, ColumnRecommendation
+
 def test_find():
     needle = 1
     none = [0,0,5,"s"]
@@ -55,3 +57,16 @@ def test_displace():
                                            ['-', '0', 'X', None, None, '-', '-'], 
                                            ['X', '0', 'X', None, '-', '-', '-']]
 
+
+def test_all_same():
+    assert all_same([9,1,2,3,4]) == False
+    assert all_same([[],[],[]])
+    assert all_same([])
+
+
+    assert all_same([ColumnRecommendation(0, ColumnClassification.LOSE),
+                     ColumnRecommendation(2, ColumnClassification.LOSE)])
+    
+    assert all_same([ColumnRecommendation(0, ColumnClassification.WIN),
+                     ColumnRecommendation(0, ColumnClassification.LOSE)]) == False
+    
