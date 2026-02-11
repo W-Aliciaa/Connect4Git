@@ -20,7 +20,7 @@ class Board:
         return board
     
     @classmethod
-    def fromBoardCode(cls, board_code: BoaradCode)->Board:
+    def fromBoardCode(cls, board_code: BoardCode)->Board:
         return cls.fromBoardRawCode(board_code.raw_code)
     
     @classmethod   
@@ -90,7 +90,7 @@ class Board:
         return new_matrix
     
     def as_code(self):
-        return BoaradCode(self)
+        return BoardCode(self)
 
     #interfaz pública 
     def play(self, player_char: str, col_number: int)->None:
@@ -181,7 +181,7 @@ class Board:
 
 #Clase para comprimir el tablero en una cadena,
 #para así poder meter el tablero como clave de un diccionario
-class BoaradCode:
+class BoardCode:
     def __init__(self, board: Board):
         self._raw_code = collapse_matrix(board._columns)
 
@@ -189,7 +189,7 @@ class BoaradCode:
     def raw_code(self)->str:
         return self._raw_code
     
-    def __eq__(self, other: BoaradCode)->bool:
+    def __eq__(self, other: BoardCode)->bool:
         if not isinstance(other, self.__class__):
             return False
         else:

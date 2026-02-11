@@ -30,3 +30,20 @@ class Match():
             winner = self.get_player("0") 
 
         return winner
+    
+
+    def is_match_over(self)->bool:
+        """
+        Pregunta al usuario si quiere jugar otra partida
+        """
+        result = True
+        while True:
+            answer = input("Would yo like to play another match? (Y/N)").upper()
+            if answer == "Y":
+                result = False
+                break
+            elif answer == "N":
+                result = True
+                break
+            
+        return result

@@ -1,7 +1,7 @@
 import pyfiglet
 from enum import Enum, auto
-from conecta4.oracle import BaseOracle, SmartOracle
-from conecta4.player import Player, HumanPlayer
+from conecta4.oracle import BaseOracle, LearningOracle, SmartOracle
+from conecta4.player import Player, HumanPlayer, ReportingPlayer
 from conecta4.match import Match
 from conecta4.board import Board
 from conecta4.list_utils import transpose
@@ -19,7 +19,7 @@ class DifficultyLevel(Enum):
 
 
 class Game:
-    def __init__(self, round_type: RoundType = RoundType.COMPUTER_VS_COMPUTER, match: Match = Match(Player("Chip"), Player("Chop")))-> None:
+    def __init__(self, round_type: RoundType = RoundType.COMPUTER_VS_COMPUTER, match: Match = Match(ReportingPlayer("Chip"), ReportingPlayer("Chop")))-> None:
         #Guardar valores recibidos
         self.round_type = round_type
         self.match = match
@@ -48,20 +48,28 @@ class Game:
             #le hago jugar
             current_player.play(self.board)
             #muestro su jugada
-            self.dispplay_move(current_player)
+            self._dispplay_move(current_player)
             #imprimo el tablero
-            self.display_board()
-            #si el juego ha terminado..
-            if self._is_game_over():
+            self._display_board()
+            #si hay vencedor o empate
+            if self._has_winner_or_tie():
                 #muestro resultado final
-                self.display_result()
-                #salgo del bucle
-                break
+                self._display_result()
 
-    def dispplay_move(self, player: Player)-> None:
-        print(f"\n{player._name} ({player._char}) has moved in column {player.last_move}")
+                if self.match.is_match_over():
+                    #se acabo el juego, salgo del bucle
+                    break
+                else:
+                    #reseteamos el tablero
+                    self.board = Board()
+                    self._display_board()
 
-    def display_board(self):
+
+
+    def _dispplay_move(self, player: Player)-> None:
+        print(f"\n{player._name} ({player._char}) has moved in column #{player.last_moves[0].position}")
+
+    def _display_board(self):
         """
         Imprimir el tablero
         """
@@ -78,18 +86,20 @@ class Game:
         #imprimirla
         print(bt)
 
-    def display_result(self)-> None:
+    def _display_result(self)-> None:
         winner = self.match.get_winner(self.board)
         if winner != None:
             print(f"\n{winner._name} ({winner._char}) wins!!!")
         else:
             print(f"\nA tie between {self.match.get_player("X").name} (X) and {self.match.get_player("0").name} (0)")
 
-    def _is_game_over(self)-> bool:
+    def _has_winner_or_tie(self)-> bool:
         winner = self.match.get_winner(self.board)
         over = False
         if winner != None:
             #hay vencedor
+            winner.on_win()
+            winner.opponent.on_lose()
             over = True
         elif self.board.is_full():
             #lleno / empate
@@ -162,15 +172,15 @@ class Game:
         """
         _levels = {DifficultyLevel.LOW : BaseOracle(),
                    DifficultyLevel.MEDIUM: SmartOracle(),
-                   DifficultyLevel.HIGH: SmartOracle()}
+                   DifficultyLevel.HIGH: LearningOracle()}
         
         if self.round_type == RoundType.COMPUTER_VS_COMPUTER:
             #ambos jugadores robóticos
-            player1 = Player("T-X", oracle = SmartOracle())
-            player2 = Player("T-1000", oracle = SmartOracle())
+            player1 = ReportingPlayer("T-X", oracle = LearningOracle())
+            player2 = ReportingPlayer("T-1000", oracle = LearningOracle())
         else:
             # ordenador vs humano
-            player1 = Player("T-800", oracle = _levels[self._difficulty_level])
+            player1 = ReportingPlayer("T-800", oracle = _levels[self._difficulty_level])
             player2 = HumanPlayer(name = input("Enter your name, human: "))
 
         return Match(player1,player2)

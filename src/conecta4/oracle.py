@@ -1,18 +1,19 @@
 from typing import TYPE_CHECKING
 from enum import Enum, auto
-from conecta4.board import Board
+from conecta4.board import Board, BoardCode
 from conecta4.settings import BOARD_COLUMNS, BOARD_ROWS
 from copy import deepcopy
 if TYPE_CHECKING:
     from conecta4.player import Player, HumanPlayer
+    from conecta4.move import Move
 
 #Clases de columna
 class ColumnClassification(Enum):
-    FULL = -1   # Imposible
-    LOSE =  5  # Derrota inminente
-    BAD  = 10  # Muy indeseable
+    FULL  = -1   # Imposible
+    LOSE  =  5   # Derrota inminente
+    BAD   = 10   # Muy indeseable
     MAYBE = 20  # Indeseable (no se muy bien que va a pasar, mejor no arriesgar)
-    WIN  = 100  # Victoria inmediata
+    WIN   = 100  # Victoria inmediata
 
 #Recomendación de una columna: indice + clase
 class ColumnRecommendation: 
@@ -76,6 +77,29 @@ class BaseOracle:
             result = ColumnRecommendation(index, ColumnClassification.FULL)
 
         return result
+    
+    def no_good_options(self, board: Board, player: "Player")-> bool:
+        """
+        Detecta que todas las clasificaciones sean BAD o FULL
+        """
+        #obtener las clasificaciones
+        columnRecommendations = self.get_recommendation(board, player)
+
+        #comprobamos que todas sean del tipo correcto
+        result = True
+        for rec in columnRecommendations:
+            if (rec._classification == ColumnClassification.WIN) or (rec._classification == ColumnClassification.MAYBE):
+                result = False
+                break
+        return result
+    
+    #métodos sobre escritos por las subclases
+    def updat_to_bad(self, move: "Move")->None:
+        pass
+    
+    def backtrack(self, list_of_moves: list["Move"])->None:
+        pass
+    
 
 class SmartOracle(BaseOracle):
     """
@@ -147,16 +171,16 @@ class MemoizingOracle(SmartOracle):
         super().__init__()
         self._past_recomendations = {}
 
-    def _make_key(board: Board, player: Player):
+    def _make_key(self, board_code: BoardCode, player: Player)->str:
         """
         La clave debe de combinar el board y el player, de la forma más sencilla posible
         """
-        return f"{board.as_code().raw_code}@{player._char}"
+        return f"{board_code.raw_code}@{player._char}"
     
 
-    def get_recommendation(self, board: Board, player: Player):
+    def get_recommendation(self, board: Board, player: Player)->ColumnRecommendation:
         #Creamos la clave
-        key = self._make_key(board, player)
+        key = self._make_key(board.as_code(), player)
 
         #Miramos en el cache: si no está, calculo y guardo en cache
         if key not in self._past_recomendations:
@@ -164,3 +188,39 @@ class MemoizingOracle(SmartOracle):
 
         #Devuelvo lo que está en caché
         return self._past_recomendations[key]
+    
+
+class LearningOracle(MemoizingOracle):
+
+    def update_to_bad(self, move: "Move")-> None:
+        #crear clave
+        key = self._make_key(move.board_code, move.player)
+        #obtener la clasificación erronea
+        recommendation = self.get_recommendation(Board.fromBoardCode(move.board_code), move.player)
+        #corregirla
+        recommendation[move.position] = ColumnRecommendation(move.position, ColumnClassification.BAD)
+        #sustituirla
+        self._past_recomendations[key] = recommendation
+
+
+    def backtrack(self, list_of_moves: list["Move"])-> None:
+        """
+        Repasa  todas las jugadas y si encuentra una en la cual todo 
+        estaba perdido, quiere decir que la anterior tiene que ser
+        acutualizada a BAD. Viajamos al pasado
+        """
+        #los moves están en orden iverso (el primero será el último)
+        print("Learning...")
+        for move in list_of_moves:
+            #lo primero que hacemos en reclasificar a bad porque si hemos entrado
+            #en esta función es porque la jugada ha ido mal
+            self.update_to_bad(move)
+
+            #evaluo si ya estaba todo perdido en las jugadas de antes
+            board = Board.fromBoardCode(move.board_code)
+            if not self.no_good_options(board, move.player):
+                #si no esta todo perdido salgo. Si no sigo
+                break
+        
+        #posiciones indeseables que he identificado
+        print(f"Size of knowledgebase: {len(self._past_recomendations)}")
